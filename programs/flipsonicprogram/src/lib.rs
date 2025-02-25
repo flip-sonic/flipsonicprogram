@@ -1,16 +1,28 @@
 use anchor_lang::prelude::*;
 
+mod liquidity;
+mod swap;
+pub mod errors;
+
+use crate::liquidity::*;
+use crate::swap::*;
+
 declare_id!("5MnVMGkWMYz5NUnrt9So1qwHQRauFa7aqhMfj83mAMBU");
 
 #[program]
 pub mod flipsonicprogram {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
-    }
+    // Swap
+
+    // Swap Quote
+
+    
+
+    //Create Liquidity
+
+    // Add Liquidity
+
+    // Withdraw Liquidity
 }
 
-#[derive(Accounts)]
-pub struct Initialize {}
