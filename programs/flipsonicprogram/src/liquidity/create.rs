@@ -1,13 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 
-
 // Initialize a new liquidity pool
-pub fn initialize_pool(
-    ctx: Context<InitializePool>,
-    pool_bump: u8,
-    fee: u16,
-) -> Result<()> {
+pub fn initialize_pool(ctx: Context<InitializePool>, pool_bump: u8, fee: u16) -> Result<()> {
     let pool = &mut ctx.accounts.pool;
     pool.mint_a = ctx.accounts.mint_a.key();
     pool.mint_b = ctx.accounts.mint_b.key();
@@ -25,7 +20,14 @@ pub struct InitializePool<'info> {
     pub pool: Account<'info, Pool>,
     pub mint_a: Account<'info, Mint>,
     pub mint_b: Account<'info, Mint>,
-    #[account(init, payer = user, mint::authority = pool, mint::decimals = 6)]
+    #[account(
+        init,
+        payer = user,
+        seeds = [b"pool", pool.key().as_ref()],
+        bump,
+        mint::authority = pool,
+        mint::decimals = 6
+    )]
     pub liquidity_token_mint: Account<'info, Mint>,
     #[account(mut)]
     pub user: Signer<'info>,

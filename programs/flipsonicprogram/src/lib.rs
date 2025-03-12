@@ -7,7 +7,7 @@ pub mod errors;
 use crate::liquidity::*;
 use crate::swap::*;
 
-declare_id!("5MnVMGkWMYz5NUnrt9So1qwHQRauFa7aqhMfj83mAMBU");
+declare_id!("eXcVEhVNDupPLxFiDZZF2TS91yBgMPK6MtKmvCjbuQ1");
 
 #[program]
 pub mod flipsonicprogram {
