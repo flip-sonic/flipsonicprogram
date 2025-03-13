@@ -5,46 +5,62 @@ use anchor_spl::{
 };
 use num_integer::Roots;
 
-use crate::liquidity::create::Pool;
 use crate::liquidity::mint::{mint_to_user, MintToUser};
 use crate::liquidity::transfer::{transfer_from_user, TransferFromUser};
+use crate::{errors::AmmError, liquidity::create::Pool};
 
 // Add liquidity to the pool and mint liquidity tokens
 pub fn add_liquidity(
     ctx: Context<AddLiquidity>,
-    amount_a: u64,
-    amount_b: u64,
+    amount_a: u128,
+    amount_b: u128,
     pool_bump: u8,
 ) -> Result<()> {
+    if amount_a == 0 || amount_b == 0 {
+        return Err(AmmError::InvalidTokenAmount.into());
+    }
+
     // Transfer tokens from user to pool
-    transfer_from_user(ctx.accounts.transfer_a_context(), amount_a)?;
-    transfer_from_user(ctx.accounts.transfer_b_context(), amount_b)?;
- 
+    transfer_from_user(ctx.accounts.transfer_a_context(), amount_a as u64)?;
+    transfer_from_user(ctx.accounts.transfer_b_context(), amount_b as u64)?;
 
     // Calculate liquidity tokens to mint
     let total_liquidity = ctx.accounts.pool.total_liquidity;
+
     let liquidity_tokens = if total_liquidity == 0 {
-        // Initial liquidity
-        amount_a.checked_mul(amount_b).unwrap().sqrt()
+        // Initial liquidity: sqrt(amount_a * amount_b)
+        (amount_a as u128)
+            .checked_mul(amount_b as u128)
+            .ok_or(ProgramError::InvalidArgument)?
+            .sqrt()
     } else {
-        // Proportional liquidity
-        let liquidity_a = amount_a
-            .checked_mul(total_liquidity)
-            .unwrap()
+        // Ensure the ratio of the new tokens matches the existing reserves
+        let expected_amount_b = amount_a
+            .checked_mul(ctx.accounts.pool.reserve_b)
+            .ok_or(ProgramError::InvalidArgument)?
             .checked_div(ctx.accounts.pool.reserve_a)
-            .unwrap();
-        let liquidity_b = amount_b
+            .ok_or(ProgramError::InvalidArgument)?;
+
+        require!(amount_b == expected_amount_b, AmmError::InvalidRatio);
+
+        // Proportional liquidity
+        let liquidity_a = (amount_a as u128)
             .checked_mul(total_liquidity)
-            .unwrap()
-            .checked_div(ctx.accounts.pool.reserve_b)
-            .unwrap();
+            .ok_or(ProgramError::InvalidArgument)?
+            .checked_div(ctx.accounts.pool.reserve_a as u128)
+            .ok_or(ProgramError::InvalidArgument)?;
+        let liquidity_b = (amount_b as u128)
+            .checked_mul(total_liquidity)
+            .ok_or(ProgramError::InvalidArgument)?
+            .checked_div(ctx.accounts.pool.reserve_b as u128)
+            .ok_or(ProgramError::InvalidArgument)?;
         liquidity_a.min(liquidity_b)
     };
-     
+
     // Mint liquidity tokens to the user
     mint_to_user(
         ctx.accounts.mint_liquidity_tokens_context(),
-        liquidity_tokens,
+        liquidity_tokens as u64,
         pool_bump,
     )?;
 
@@ -111,8 +127,6 @@ pub struct AddLiquidity<'info> {
     pub pool_token_a: Account<'info, TokenAccount>,
     #[account(mut)]
     pub pool_token_b: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub user_liquidity_token: Account<'info, TokenAccount>,
     pub user: Signer<'info>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,

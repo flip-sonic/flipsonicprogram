@@ -8,7 +8,7 @@ use crate::liquidity::transfer::{transfer_to_user, TransferToUser};
 // Remove liquidity from the pool and burn liquidity tokens
 pub fn remove_liquidity(
     ctx: Context<RemoveLiquidity>,
-    liquidity_tokens: u64,
+    liquidity_tokens:  u128,
     pool_bump: u8,
 ) -> Result<()> {
 
@@ -17,11 +17,11 @@ pub fn remove_liquidity(
     let amount_b = liquidity_tokens.checked_mul(ctx.accounts.pool.reserve_b).unwrap().checked_div(ctx.accounts.pool.total_liquidity).unwrap();
 
     // Burn liquidity tokens
-    burn_user_token(ctx.accounts.burn_liquidity_tokens_context(), liquidity_tokens)?;
+    burn_user_token(ctx.accounts.burn_liquidity_tokens_context(), liquidity_tokens as u64)?;
 
     // Transfer tokens back to the user
-    transfer_to_user(ctx.accounts.transfer_a_context(), amount_a, pool_bump)?;
-    transfer_to_user(ctx.accounts.transfer_b_context(), amount_b, pool_bump)?;
+    transfer_to_user(ctx.accounts.transfer_a_context(), amount_a as u64, pool_bump)?;
+    transfer_to_user(ctx.accounts.transfer_b_context(), amount_b as u64, pool_bump)?;
 
 
     let pool = &mut ctx.accounts.pool;

@@ -8,8 +8,8 @@ use crate::liquidity::transfer::{transfer_from_user,transfer_to_user, TransferFr
 // Swap tokens
 pub fn swap(
     ctx: Context<Swap>,
-    amount_in: u64,
-    min_amount_out: u64,
+    amount_in: u128,
+    min_amount_out: u128,
     pool_bump: u8
 ) -> Result<()> {
 
@@ -18,8 +18,8 @@ pub fn swap(
     require!(amount_out >= min_amount_out, AmmError::SlippageExceeded);
 
     // Transfer tokens
-    transfer_from_user(ctx.accounts.transfer_in_context(), amount_in)?;
-    transfer_to_user(ctx.accounts.transfer_out_context(), amount_out, pool_bump)?;
+    transfer_from_user(ctx.accounts.transfer_in_context(), amount_in as u64)?;
+    transfer_to_user(ctx.accounts.transfer_out_context(), amount_out as u64, pool_bump)?;
 
     let pool = &mut ctx.accounts.pool;
 

@@ -26,7 +26,7 @@ pub struct InitializePool<'info> {
         seeds = [b"pool", pool.key().as_ref()],
         bump,
         mint::authority = pool,
-        mint::decimals = 6
+        mint::decimals = 9
     )]
     pub liquidity_token_mint: Account<'info, Mint>,
     #[account(mut)]
@@ -41,10 +41,10 @@ pub struct Pool {
     pub mint_a: Pubkey,
     pub mint_b: Pubkey,
     pub owner: Pubkey,
-    pub reserve_a: u64,
-    pub reserve_b: u64,
+    pub reserve_a: u128,
+    pub reserve_b: u128,
     pub fee: u16,
     pub bump: u8,
     pub liquidity_token_mint: Pubkey,
-    pub total_liquidity: u64,
+    pub total_liquidity: u128,
 }

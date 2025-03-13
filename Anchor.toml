@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-flipsonicprogram = "eXcVEhVNDupPLxFiDZZF2TS91yBgMPK6MtKmvCjbuQ1"
+flipsonicprogram = "eJ4nfcgfmDQdv2RrcDdijaJmDCicRqHKGGUgPJjBLcm"
 
 [registry]
 url = "https://api.apr.dev"

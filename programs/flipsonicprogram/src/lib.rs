@@ -7,7 +7,7 @@ pub mod errors;
 use crate::liquidity::*;
 use crate::swap::*;
 
-declare_id!("eXcVEhVNDupPLxFiDZZF2TS91yBgMPK6MtKmvCjbuQ1");
+declare_id!("eJ4nfcgfmDQdv2RrcDdijaJmDCicRqHKGGUgPJjBLcm");
 
 #[program]
 pub mod flipsonicprogram {
@@ -25,8 +25,8 @@ pub mod flipsonicprogram {
     // Add Liquidity
     pub fn add_liquidity(
         ctx: Context<AddLiquidity>,
-        amount_a: u64,
-        amount_b: u64,
+        amount_a: u128,
+        amount_b: u128,
         pool_bump: u8,
     ) -> Result<()> {
         liquidity::add_liquidity(ctx, amount_a, amount_b, pool_bump)
@@ -35,7 +35,7 @@ pub mod flipsonicprogram {
     // Withdraw Liquidity
     pub fn remove_liquidity(
         ctx: Context<RemoveLiquidity>,
-        liquidity_tokens: u64,
+        liquidity_tokens: u128,
         pool_bump: u8,
     ) -> Result<()> {
         liquidity::remove_liquidity(ctx, liquidity_tokens, pool_bump)
@@ -44,8 +44,8 @@ pub mod flipsonicprogram {
     // Swap
     pub fn swap(
         ctx: Context<Swap>,
-        amount_in: u64,
-        min_amount_out: u64,
+        amount_in: u128,
+        min_amount_out: u128,
         pool_bump: u8
     ) -> Result<()> {
         swap::swap(ctx, amount_in, min_amount_out, pool_bump)
