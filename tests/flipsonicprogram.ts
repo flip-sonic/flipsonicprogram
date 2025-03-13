@@ -176,79 +176,74 @@ describe("flipsonicprogram", () => {
 
   });
 
-  // it("Withdraw Liquidity to the pool", async () => {
-  //   // Fetch the pool account
-  //   const fetchedAccount = await program.account.pool.fetch(poolAccount);
+  it("Withdraw Liquidity to the pool", async () => {
+    // Fetch the pool account
+    const fetchedAccount = await program.account.pool.fetch(poolAccount);
 
-  //   const tokenA_amount = new anchor.BN(10000 * 1e6);
-  //   const tokenB_amount = new anchor.BN(1000000 * 1e6);
+    const liquidityTokens = new anchor.BN(10 * 1e9);
 
-  //   // get or Create user's associated token account for user Liquidity Token
-  //   const userLiquidityTokenAccount = await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     signer, // Fee payer
-  //     fetchedAccount.liquidityTokenMint,
-  //     signer.publicKey
-  //   );
+    // get or Create user's associated token account for user Liquidity Token
+    const userLiquidityTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      fetchedAccount.liquidityTokenMint,
+      signer.publicKey
+    );
 
-  //   // get or Create user's associated token account for token A
-  //   const userTokenA = await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     signer, // Fee payer
-  //     tokenA,
-  //     signer.publicKey,
-  //   );
+    // get or Create user's associated token account for token A
+    const userTokenA = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenA,
+      signer.publicKey,
+    );
 
-  //   // get or Create user's associated token account for token B
-  //   const userTokenB = await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     signer, // Fee payer
-  //     tokenB,
-  //     signer.publicKey,
-  //   );
+    // get or Create user's associated token account for token B
+    const userTokenB = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenB,
+      signer.publicKey,
+    );
 
-  //   // get or Create pool's associated token account for token A
-  //   const poolTokenA = await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     signer, // Fee payer
-  //     tokenA,
-  //     poolAccount,
-  //     true
-  //   );
+    // get or Create pool's associated token account for token A
+    const poolTokenA = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenA,
+      poolAccount,
+      true
+    );
     
-  //   // get or Create pool's associated token account for token B
-  //   const poolTokenB = await getOrCreateAssociatedTokenAccount(
-  //     provider.connection,
-  //     signer, // Fee payer
-  //     tokenB,
-  //     poolAccount,
-  //     true
-  //   );
+    // get or Create pool's associated token account for token B
+    const poolTokenB = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenB,
+      poolAccount,
+      true
+    );
 
 
-  //   const accountData ={
-  //     liquidityTokenMint,
-  //     pool: poolAccount,
-  //     userLiquidityTokenAccount: userLiquidityTokenAccount.address,
-  //     user: signer.publicKey,
-  //     userTokenA: userTokenA.address,
-  //     userTokenB: userTokenB.address,
-  //     poolTokenA: poolTokenA.address,
-  //     poolTokenB: poolTokenB.address,
-  //     userLiquidityToken: userLiquidityTokenAccount.address,
-  //     tokenProgram: TOKEN_PROGRAM_ID,
-  //     systemProgram: anchor.web3.SystemProgram.programId,
-  //     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-  //     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
-  //   }
+    const accountData ={
+      liquidityTokenMint,
+      pool: poolAccount,
+      userLiquidityTokenAccount: userLiquidityTokenAccount.address,
+      user: signer.publicKey,
+      userTokenA: userTokenA.address,
+      userTokenB: userTokenB.address,
+      poolTokenA: poolTokenA.address,
+      poolTokenB: poolTokenB.address,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
 
-  //   const signature = await program.methods.addLiquidity(tokenA_amount, tokenB_amount, poolBump)
-  //     .accounts(accountData)
-  //     .signers([])
-  //     .rpc();
+    const signature = await program.methods.removeLiquidity(liquidityTokens, poolBump)
+      .accounts(accountData)
+      .signers([])
+      .rpc();
 
-  //   console.log("Signature", signature);
+    console.log("Signature", signature);
 
-  // });
+  });
 
 });
