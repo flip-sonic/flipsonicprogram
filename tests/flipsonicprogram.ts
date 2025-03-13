@@ -61,44 +61,44 @@ describe("flipsonicprogram", () => {
   //   console.log("Minted tokens to user", tokenMint.toBase58());
   // });
 
-  // it("Initializes a pool", async () => {
- 
-  //   console.log("Pool Account", poolAccount.toBase58());
+  it("Initializes a pool", async () => {
 
-  //   console.log("Liquidity Token Mint", liquidityTokenMint.toBase58());
+    console.log("Pool Account", poolAccount.toBase58());
 
-  //   const accountData = {
-  //     pool: poolAccount,
-  //     mintA: tokenA,
-  //     mintB: tokenB,
-  //     liquidityTokenMint: liquidityTokenMint,
-  //     user: signer.publicKey,
-  //     systemProgram: anchor.web3.SystemProgram.programId,
-  //     token_program: TOKEN_PROGRAM_ID,
-  //   }
+    console.log("Liquidity Token Mint", liquidityTokenMint.toBase58());
 
-  //   const fee = 30;
-  //   const signature = await program.methods.initializePool(poolBump, fee)
-  //     .accounts(accountData)
-  //     .signers([])
-  //     .rpc();
+    const accountData = {
+      pool: poolAccount,
+      mintA: tokenA,
+      mintB: tokenB,
+      liquidityTokenMint: liquidityTokenMint,
+      user: signer.publicKey,
+      systemProgram: anchor.web3.SystemProgram.programId,
+      token_program: TOKEN_PROGRAM_ID,
+    }
 
-  //   console.log("Signature", signature);
+    const fee = 30;
+    const signature = await program.methods.initializePool(poolBump, fee)
+      .accounts(accountData)
+      .signers([])
+      .rpc();
 
-  //   // Fetch the pool account to verify its state
-  //   const fetchedAccount = await program.account.pool.fetch(poolAccount);
-  //   console.log("Fetched Pool Account:", fetchedAccount);
+    console.log("Signature", signature);
 
-  //   // Verify the pool's state
-  //   assert.equal(fetchedAccount.mintA.toBase58(), tokenA.toBase58());
-  //   assert.equal(fetchedAccount.mintB.toBase58(), tokenB.toBase58());
-  //   assert.equal(fetchedAccount.fee, fee);
-  //   assert.equal(fetchedAccount.liquidityTokenMint.toBase58(), liquidityTokenMint.toBase58());
-  //   assert.equal(fetchedAccount.reserveA.toNumber(), 0);
-  //   assert.equal(fetchedAccount.reserveB.toNumber(), 0);
-  //   assert.equal(fetchedAccount.totalLiquidity.toNumber(), 0);
+    // Fetch the pool account to verify its state
+    const fetchedAccount = await program.account.pool.fetch(poolAccount);
+    console.log("Fetched Pool Account:", fetchedAccount);
 
-  // });
+    // Verify the pool's state
+    assert.equal(fetchedAccount.mintA.toBase58(), tokenA.toBase58());
+    assert.equal(fetchedAccount.mintB.toBase58(), tokenB.toBase58());
+    assert.equal(fetchedAccount.fee, fee);
+    assert.equal(fetchedAccount.liquidityTokenMint.toBase58(), liquidityTokenMint.toBase58());
+    assert.equal(fetchedAccount.reserveA.toNumber(), 0);
+    assert.equal(fetchedAccount.reserveB.toNumber(), 0);
+    assert.equal(fetchedAccount.totalLiquidity.toNumber(), 0);
+
+  });
 
 
   it("add Liquidity to the pool", async () => {
@@ -140,7 +140,7 @@ describe("flipsonicprogram", () => {
       poolAccount,
       true
     );
-    
+
     // get or Create pool's associated token account for token B
     const poolTokenB = await getOrCreateAssociatedTokenAccount(
       provider.connection,
@@ -151,7 +151,7 @@ describe("flipsonicprogram", () => {
     );
 
 
-    const accountData ={
+    const accountData = {
       liquidityTokenMint,
       pool: poolAccount,
       userLiquidityTokenAccount: userLiquidityTokenAccount.address,
@@ -214,7 +214,7 @@ describe("flipsonicprogram", () => {
       poolAccount,
       true
     );
-    
+
     // get or Create pool's associated token account for token B
     const poolTokenB = await getOrCreateAssociatedTokenAccount(
       provider.connection,
@@ -225,7 +225,7 @@ describe("flipsonicprogram", () => {
     );
 
 
-    const accountData ={
+    const accountData = {
       liquidityTokenMint,
       pool: poolAccount,
       userLiquidityTokenAccount: userLiquidityTokenAccount.address,
@@ -238,6 +238,89 @@ describe("flipsonicprogram", () => {
     }
 
     const signature = await program.methods.removeLiquidity(liquidityTokens, poolBump)
+      .accounts(accountData)
+      .signers([])
+      .rpc();
+
+    console.log("Signature", signature);
+
+  });
+
+  it("Swap to the pool", async () => {
+
+    // Fetch the pool account
+    const fetchedAccount = await program.account.pool.fetch(poolAccount);
+
+    // Perform a swap
+    const slippageTolerance = 0.005; // 0.5%
+    const amount = 10 * 1e6
+    const amountIn = new anchor.BN(amount);
+    const reserveA = fetchedAccount.reserveA.toNumber();
+    const reserveB = fetchedAccount.reserveB.toNumber();
+
+    // Calculate expected output
+    const expectedAmountOut = (reserveB * amount) / (reserveA + amount);
+
+    // Apply slippage tolerance
+    const minAmountOut = new anchor.BN(Math.floor(expectedAmountOut * (1 - slippageTolerance)));
+
+    console.log(9 * 1e6)
+
+    // get or Create user's associated token account for user Liquidity Token
+    const userLiquidityTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      fetchedAccount.liquidityTokenMint,
+      signer.publicKey
+    );
+
+    // get or Create user's associated token account for token A
+    const userTokenA = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenA,
+      signer.publicKey,
+    );
+
+    // get or Create user's associated token account for token B
+    const userTokenB = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenB,
+      signer.publicKey,
+    );
+
+    // get or Create pool's associated token account for token A
+    const poolTokenA = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenA,
+      poolAccount,
+      true
+    );
+
+    // get or Create pool's associated token account for token B
+    const poolTokenB = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      signer, // Fee payer
+      tokenB,
+      poolAccount,
+      true
+    );
+
+    const accountData = {
+      liquidityTokenMint,
+      pool: poolAccount,
+      userLiquidityTokenAccount: userLiquidityTokenAccount.address,
+      user: signer.publicKey,
+      userTokenIn: userTokenA.address,
+      userTokenOut: userTokenB.address,
+      poolTokenIn: poolTokenA.address,
+      poolTokenOut: poolTokenB.address,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    const signature = await program.methods.swap(amountIn, minAmountOut, poolBump)
       .accounts(accountData)
       .signers([])
       .rpc();

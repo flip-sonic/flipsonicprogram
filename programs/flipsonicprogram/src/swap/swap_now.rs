@@ -13,10 +13,36 @@ pub fn swap(
     pool_bump: u8
 ) -> Result<()> {
 
-    // Calculate output amount using constant product formula
-    let amount_out = (ctx.accounts.pool.reserve_b * amount_in) / (ctx.accounts.pool.reserve_a + amount_in);
-    require!(amount_out >= min_amount_out, AmmError::SlippageExceeded);
+    require!(ctx.accounts.user_token_in.mint == ctx.accounts.pool.mint_a || ctx.accounts.user_token_in.mint == ctx.accounts.pool.mint_b , AmmError::WrongPool);
+    require!(ctx.accounts.user_token_out.mint == ctx.accounts.pool.mint_a || ctx.accounts.user_token_out.mint == ctx.accounts.pool.mint_b, AmmError::WrongPool);
 
+    // Deduct the fee (e.g., 0.3%)
+    let fee = amount_in
+        .checked_mul(ctx.accounts.pool.fee as u128)
+        .ok_or(AmmError::MathError)?
+        .checked_div(10000)
+        .ok_or(AmmError::MathError)?;
+    let amount_in_after_fee = amount_in.checked_sub(fee).ok_or(AmmError::MathError)?;
+    
+    // Calculate the output amount
+    let amount_out = if ctx.accounts.user_token_in.mint == ctx.accounts.pool.mint_a {
+        // Swap Token A to Token B
+        (ctx.accounts.pool.reserve_b)
+            .checked_mul(amount_in_after_fee as u128)
+            .ok_or(AmmError::MathError)?
+            .checked_div((ctx.accounts.pool.reserve_a) + (amount_in_after_fee as u128))
+            .ok_or(AmmError::MathError)?
+    } else {
+        // Swap Token B to Token A
+        (ctx.accounts.pool.reserve_a)
+            .checked_mul(amount_in_after_fee as u128)
+            .ok_or(AmmError::MathError)?
+            .checked_div((ctx.accounts.pool.reserve_b) + (amount_in_after_fee as u128))
+            .ok_or(AmmError::MathError)?
+    } ;
+    
+    require!(amount_out >= min_amount_out, AmmError::SlippageExceeded);
+ 
     // Transfer tokens
     transfer_from_user(ctx.accounts.transfer_in_context(), amount_in as u64)?;
     transfer_to_user(ctx.accounts.transfer_out_context(), amount_out as u64, pool_bump)?;
@@ -24,8 +50,15 @@ pub fn swap(
     let pool = &mut ctx.accounts.pool;
 
     // Update reserves
-    pool.reserve_a += amount_in;
-    pool.reserve_b -= amount_out;
+    if ctx.accounts.user_token_in.mint == pool.mint_a {
+        // Swap Token A to Token B
+        pool.reserve_a += amount_in;
+        pool.reserve_b -= amount_out;
+    } else {
+        // Swap Token B to Token A
+        pool.reserve_b += amount_in;
+        pool.reserve_a -= amount_out;
+    }
 
     Ok(())
 }

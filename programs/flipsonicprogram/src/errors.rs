@@ -9,4 +9,8 @@ pub enum AmmError {
     InvalidTokenAmount,
     #[msg("In Balance amount")]
     InvalidRatio,
+    #[msg("Math error")]
+    MathError,
+    #[msg("Wrong Pool")]
+    WrongPool,
 }

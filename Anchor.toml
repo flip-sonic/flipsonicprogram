@@ -4,14 +4,14 @@
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-flipsonicprogram = "eJ4nfcgfmDQdv2RrcDdijaJmDCicRqHKGGUgPJjBLcm"
+[programs.testnet]
+flipsonicprogram = "edJUEE32ixRxvoiCfVD9Svo5yaSrTNrgxrYDfEVyo1Q"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "https://api.testnet.sonic.game/"
 wallet = "./7e8EC4BuPiEnajQ6V86Y8pWs4TJuiz5xCFxD9uXYMQaL.json"
 
 [scripts]
