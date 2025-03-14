@@ -1,8 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Flipsonicprogram } from "../target/types/flipsonicprogram";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, createAccount, createMint, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createAccount, createAssociatedTokenAccountInstruction, createInitializeMint2Instruction, createMint, createMintToCheckedInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, getOrCreateAssociatedTokenAccount, MINT_SIZE, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Commitment, Connection, Keypair, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from "@solana/web3.js";
 import { assert } from "chai";
 
 
@@ -16,8 +16,14 @@ describe("flipsonicprogram", () => {
   const signer = anchor.web3.Keypair.fromSecretKey(
     new Uint8Array(JSON.parse(require('fs').readFileSync('./7e8EC4BuPiEnajQ6V86Y8pWs4TJuiz5xCFxD9uXYMQaL.json', 'utf8')))
   );
-  const tokenA = new PublicKey("BtvVH5ipBmdTNj7iQhHh9mFnBE4qCX8mwS1Wx7NSw1ug")
-  const tokenB = new PublicKey("2v1RXk976nnXwt9wgLatyALvYYxvZUF36yKDG3MCH7Hz")
+
+  // Sonic Tokens
+  const tokenA = new PublicKey("3jRK5ys7vMtMWxYiSTwxgKB9QSDQukNb8dNpDadyqsJo")
+  const tokenB = new PublicKey("4mhwo7mxPx3u1TsZRhyj4dFBxvgXsawG8MxcDGt2xpq3")
+
+  // for local solana testing
+  // const tokenA = new PublicKey("BtvVH5ipBmdTNj7iQhHh9mFnBE4qCX8mwS1Wx7NSw1ug")
+  // const tokenB = new PublicKey("2v1RXk976nnXwt9wgLatyALvYYxvZUF36yKDG3MCH7Hz")
 
   // pool Account
   const [poolAccount, poolBump] = PublicKey.findProgramAddressSync(
@@ -32,33 +38,97 @@ describe("flipsonicprogram", () => {
 
 
   // it("Create Token and Mint", async () => {
+  //   const commitment = 'processed';
 
-  //   const tokenMint = await createMint(
-  //     provider.connection,
-  //     signer,
-  //     signer.publicKey,
-  //     null,
-  //     6,
+  //   const connection = new Connection('https://api.testnet.v1.sonic.game', {
+  //     commitment,
+  //     wsEndpoint: 'wss://api.testnet.v1.sonic.game'
+  //   });
+    
+  //   const tx = new Transaction();
+    
+  //   const tokenMintAccountKeypair = Keypair.generate();
+  //   console.log("token mint account: ", tokenMintAccountKeypair.publicKey.toBase58());
+    
+  //   const decimal = 6;
+    
+  //   // Calculate the rent-exempt minimum balance for the mint account
+  //   const lamports = await getMinimumBalanceForRentExemptMint(connection);
+
+  //   // Add instruction to create the mint account
+  //   tx.add(
+  //     SystemProgram.createAccount({
+  //       fromPubkey: signer.publicKey,
+  //       newAccountPubkey: tokenMintAccountKeypair.publicKey,
+  //       lamports,
+  //       space: MINT_SIZE,
+  //       programId: TOKEN_PROGRAM_ID,
+  //     })
   //   );
-
-  //   // Create token accounts
-  //   const userTokenAccount = await createAccount(
-  //     provider.connection,
-  //     signer,
-  //     tokenMint,
+    
+  //   // Add instruction to initialize the mint
+  //   tx.add(
+  //     createInitializeMint2Instruction(
+  //       tokenMintAccountKeypair.publicKey,
+  //       decimal,
+  //       signer.publicKey,
+  //       null
+  //     )
+  //   );
+    
+  //   // Get the associated token account address
+  //   const senderTokenAccount = await getAssociatedTokenAddress(
+  //     tokenMintAccountKeypair.publicKey,
   //     signer.publicKey
   //   );
-
-  //   // Mint some tokens to user
-  //   const signatureMint = await mintTo(
-  //     provider.connection,
-  //     signer,
-  //     tokenMint,
-  //     userTokenAccount,
-  //     signer.publicKey,
-  //     1000000000000 * 1e6
+    
+  //   // Check if the associated token account exists
+  //   const accountInfo = await connection.getAccountInfo(senderTokenAccount);
+  //   if (!accountInfo) {
+  //     // Add instruction to create the associated token account if it doesn't exist
+  //     tx.add(
+  //       createAssociatedTokenAccountInstruction(
+  //         signer.publicKey,
+  //         senderTokenAccount,
+  //         signer.publicKey,
+  //         tokenMintAccountKeypair.publicKey,
+  //         TOKEN_PROGRAM_ID,
+  //         ASSOCIATED_TOKEN_PROGRAM_ID
+  //       )
+  //     );
+  //   }
+    
+  //   // Add instruction to mint tokens
+  //   tx.add(
+  //     createMintToCheckedInstruction(
+  //       tokenMintAccountKeypair.publicKey,
+  //       senderTokenAccount,
+  //       signer.publicKey,
+  //       1000000000000 * 10 ** decimal, // Correct amount calculation
+  //       decimal,
+  //       [],
+  //       TOKEN_PROGRAM_ID,
+  //     )
   //   );
-  //   console.log("Minted tokens to user", tokenMint.toBase58());
+    
+  //   // Set the fee payer and recent blockhash
+  //   tx.feePayer = signer.publicKey;
+  //   const { blockhash } = await connection.getLatestBlockhash();
+  //   tx.recentBlockhash = blockhash;
+    
+  //   // Sign and send the transaction
+  //   try {
+  //     const txHash = await sendAndConfirmTransaction(connection, tx, [signer, tokenMintAccountKeypair]);
+  //     console.log("tx hash: ", txHash);
+  //   } catch (error) {
+  //     console.error("Error sending transaction: ", error);
+    
+  //     // Log detailed error information
+  //     if (error.logs) {
+  //       console.error("Transaction logs: ", error.logs);
+  //     }
+  //   }
+
   // });
 
   it("Initializes a pool", async () => {
@@ -99,8 +169,7 @@ describe("flipsonicprogram", () => {
     assert.equal(fetchedAccount.totalLiquidity.toNumber(), 0);
 
   });
-
-
+  
   it("add Liquidity to the pool", async () => {
     // Fetch the pool account
     const fetchedAccount = await program.account.pool.fetch(poolAccount);
