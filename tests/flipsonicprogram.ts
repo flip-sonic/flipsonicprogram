@@ -13,6 +13,13 @@ describe("flipsonicprogram", () => {
 
   const program = anchor.workspace.Flipsonicprogram as Program<Flipsonicprogram>;
 
+  const commitment = 'processed';
+
+  const connection = new Connection('https://api.testnet.v1.sonic.game', {
+    commitment,
+    wsEndpoint: 'wss://api.testnet.v1.sonic.game'
+  });
+
   const signer = anchor.web3.Keypair.fromSecretKey(
     new Uint8Array(JSON.parse(require('fs').readFileSync('./7e8EC4BuPiEnajQ6V86Y8pWs4TJuiz5xCFxD9uXYMQaL.json', 'utf8')))
   );
@@ -44,14 +51,14 @@ describe("flipsonicprogram", () => {
   //     commitment,
   //     wsEndpoint: 'wss://api.testnet.v1.sonic.game'
   //   });
-    
+
   //   const tx = new Transaction();
-    
+
   //   const tokenMintAccountKeypair = Keypair.generate();
   //   console.log("token mint account: ", tokenMintAccountKeypair.publicKey.toBase58());
-    
+
   //   const decimal = 6;
-    
+
   //   // Calculate the rent-exempt minimum balance for the mint account
   //   const lamports = await getMinimumBalanceForRentExemptMint(connection);
 
@@ -65,7 +72,7 @@ describe("flipsonicprogram", () => {
   //       programId: TOKEN_PROGRAM_ID,
   //     })
   //   );
-    
+
   //   // Add instruction to initialize the mint
   //   tx.add(
   //     createInitializeMint2Instruction(
@@ -75,13 +82,13 @@ describe("flipsonicprogram", () => {
   //       null
   //     )
   //   );
-    
+
   //   // Get the associated token account address
   //   const senderTokenAccount = await getAssociatedTokenAddress(
   //     tokenMintAccountKeypair.publicKey,
   //     signer.publicKey
   //   );
-    
+
   //   // Check if the associated token account exists
   //   const accountInfo = await connection.getAccountInfo(senderTokenAccount);
   //   if (!accountInfo) {
@@ -97,7 +104,7 @@ describe("flipsonicprogram", () => {
   //       )
   //     );
   //   }
-    
+
   //   // Add instruction to mint tokens
   //   tx.add(
   //     createMintToCheckedInstruction(
@@ -110,19 +117,19 @@ describe("flipsonicprogram", () => {
   //       TOKEN_PROGRAM_ID,
   //     )
   //   );
-    
+
   //   // Set the fee payer and recent blockhash
   //   tx.feePayer = signer.publicKey;
   //   const { blockhash } = await connection.getLatestBlockhash();
   //   tx.recentBlockhash = blockhash;
-    
+
   //   // Sign and send the transaction
   //   try {
   //     const txHash = await sendAndConfirmTransaction(connection, tx, [signer, tokenMintAccountKeypair]);
   //     console.log("tx hash: ", txHash);
   //   } catch (error) {
   //     console.error("Error sending transaction: ", error);
-    
+
   //     // Log detailed error information
   //     if (error.logs) {
   //       console.error("Transaction logs: ", error.logs);
@@ -169,17 +176,17 @@ describe("flipsonicprogram", () => {
     assert.equal(fetchedAccount.totalLiquidity.toNumber(), 0);
 
   });
-  
+
   it("add Liquidity to the pool", async () => {
     // Fetch the pool account
     const fetchedAccount = await program.account.pool.fetch(poolAccount);
 
-    const tokenA_amount = new anchor.BN(10000 * 1e6);
-    const tokenB_amount = new anchor.BN(1000000 * 1e6);
+    const tokenA_amount = new anchor.BN(10000 * 10e6);
+    const tokenB_amount = new anchor.BN(1000000 * 10e6);
 
     // get or Create user's associated token account for user Liquidity Token
     const userLiquidityTokenAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       fetchedAccount.liquidityTokenMint,
       signer.publicKey
@@ -187,7 +194,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for token A
     const userTokenA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenA,
       signer.publicKey,
@@ -195,7 +202,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for token B
     const userTokenB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenB,
       signer.publicKey,
@@ -203,7 +210,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create pool's associated token account for token A
     const poolTokenA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenA,
       poolAccount,
@@ -212,7 +219,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create pool's associated token account for token B
     const poolTokenB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenB,
       poolAccount,
@@ -245,7 +252,7 @@ describe("flipsonicprogram", () => {
 
   });
 
-  it("Withdraw Liquidity to the pool", async () => {
+  it("Withdraw Liquidity from the pool", async () => {
     // Fetch the pool account
     const fetchedAccount = await program.account.pool.fetch(poolAccount);
 
@@ -253,7 +260,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for user Liquidity Token
     const userLiquidityTokenAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       fetchedAccount.liquidityTokenMint,
       signer.publicKey
@@ -261,7 +268,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for token A
     const userTokenA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenA,
       signer.publicKey,
@@ -269,7 +276,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for token B
     const userTokenB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenB,
       signer.publicKey,
@@ -277,7 +284,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create pool's associated token account for token A
     const poolTokenA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenA,
       poolAccount,
@@ -286,7 +293,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create pool's associated token account for token B
     const poolTokenB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenB,
       poolAccount,
@@ -315,14 +322,14 @@ describe("flipsonicprogram", () => {
 
   });
 
-  it("Swap to the pool", async () => {
+  it("Swap on pool", async () => {
 
     // Fetch the pool account
     const fetchedAccount = await program.account.pool.fetch(poolAccount);
 
     // Perform a swap
     const slippageTolerance = 0.005; // 0.5%
-    const amount = 10 * 1e6
+    const amount = 10 * 10e6
     const amountIn = new anchor.BN(amount);
     const reserveA = fetchedAccount.reserveA.toNumber();
     const reserveB = fetchedAccount.reserveB.toNumber();
@@ -333,11 +340,11 @@ describe("flipsonicprogram", () => {
     // Apply slippage tolerance
     const minAmountOut = new anchor.BN(Math.floor(expectedAmountOut * (1 - slippageTolerance)));
 
-    console.log(9 * 1e6)
+    console.log(9 * 10e6)
 
     // get or Create user's associated token account for user Liquidity Token
     const userLiquidityTokenAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       fetchedAccount.liquidityTokenMint,
       signer.publicKey
@@ -345,7 +352,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for token A
     const userTokenA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenA,
       signer.publicKey,
@@ -353,7 +360,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create user's associated token account for token B
     const userTokenB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenB,
       signer.publicKey,
@@ -361,7 +368,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create pool's associated token account for token A
     const poolTokenA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenA,
       poolAccount,
@@ -370,7 +377,7 @@ describe("flipsonicprogram", () => {
 
     // get or Create pool's associated token account for token B
     const poolTokenB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      connection,
       signer, // Fee payer
       tokenB,
       poolAccount,
